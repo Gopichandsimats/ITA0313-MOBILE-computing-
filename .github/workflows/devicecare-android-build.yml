@@ -11,8 +11,34 @@ on:
       - ".github/workflows/devicecare-android-build.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  train-model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install model training dependencies
+        run: python -m pip install --upgrade pip tensorflow-cpu==2.16.1 numpy==1.26.4
+      - name: Train and export TensorFlow Lite model
+        working-directory: Capstone/DeviceCare
+        run: python ml/train_device_model.py --output app/src/main/assets/device_health_model.tflite
+      - name: Upload trained TFLite model
+        uses: actions/upload-artifact@v4
+        with:
+          name: device-care-tflite-model
+          path: Capstone/DeviceCare/app/src/main/assets/device_health_model.tflite
+          if-no-files-found: error
+
   build:
+    needs: train-model
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,10 +55,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-      - name: Generate Gradle wrapper
-        run: gradle wrapper --gradle-version 8.9
+      - name: Download trained TFLite model
+        uses: actions/download-artifact@v4
+        with:
+          name: device-care-tflite-model
+          path: Capstone/DeviceCare/app/src/main/assets
       - name: Build debug APK
-        run: ./gradlew assembleDebug
+        run: gradle assembleDebug
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
