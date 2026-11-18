@@ -1,6 +1,6 @@
 const app=document.getElementById('app'), picker=document.getElementById('filePicker'), installBtn=document.getElementById('installBtn');
 let page='home', battery=null, deferredPrompt=null, files=[], history=[], storageEstimate={usage:0,quota:0}, lastBattery=null;
-const fmt=n=>n>=1024**3?(n/1024**3).toFixed(2)+' GB':n>=1024**2?(n/1024**2).toFixed(1)+' MB':n>=1024?n/1024|0+' KB':n+' B';
+const fmt=n=>n>=1024**3?(n/1024**3).toFixed(2)+' GB':n>=1024**2?(n/1024**2).toFixed(1)+' MB':n>=1024?(n/1024|0)+' KB':n+' B';
 const safe=(n)=>Math.max(0,Math.min(100,n||0));
 const now=()=>new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 const go=p=>{page=p;render();document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.go===p||(p==='battery'||p==='storage'||p==='ram'||p==='cpu'||p==='device'||p==='apps'||p==='batterycare'||p==='storagecare'||p==='network'||p==='privacy'||p==='settings' ? b.dataset.go==='tools':false)));window.scrollTo({top:0,behavior:'smooth'});};
