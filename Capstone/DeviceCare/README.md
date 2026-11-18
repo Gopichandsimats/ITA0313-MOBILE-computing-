@@ -30,3 +30,16 @@ Native Android device monitoring app built with Kotlin, Jetpack Compose, Materia
 
 ## Build
 Open this folder in Android Studio and build the app debug variant, or use the repository GitHub Actions workflow. The workflow trains/packages the TensorFlow Lite model and uploads a debug APK artifact.
+
+
+## Installable web app (no APK)
+
+Device Care also includes a Progressive Web App (PWA) in `web/`. It is deployed with the repository's GitHub Pages workflow alongside FixWise.
+
+- **Open Device Care:** https://gopichandsimats.github.io/ITA0313-MOBILE-computing-/DeviceCare/
+- On Android, open the link in Chrome, tap the three-dot menu, then choose **Install app** or **Add to Home screen**.
+- The PWA caches its app shell for offline reopening after the first successful visit.
+
+### Browser limitations
+
+The PWA is not a native Android application. It can show browser-exposed battery readings on compatible browsers, estimate this website's own storage use, and analyze files the user selects. Standard browser security does not allow it to inspect total phone storage, all installed apps, system RAM, total CPU usage, battery health, voltage or temperature. Unsupported values are clearly shown as unavailable. The native Android project remains in this repository for hardware-level features.
