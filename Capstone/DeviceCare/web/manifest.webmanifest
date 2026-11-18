@@ -1,0 +1,15 @@
+{
+  "id": "./",
+  "name": "Device Care — Device Monitor",
+  "short_name": "Device Care",
+  "description": "Device performance, storage and battery insights.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#10182d",
+  "theme_color": "#10182d",
+  "icons": [
+    {"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
