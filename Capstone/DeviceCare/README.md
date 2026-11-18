@@ -1,41 +1,57 @@
 # Device Care — Mobile Device Performance and Resource Management
 
-A native Android application built with Kotlin and Jetpack Compose. It monitors available device resource metrics and provides privacy-first, on-device insights.
+Native Android app built with Kotlin, Jetpack Compose, Material 3 and TensorFlow Lite.
 
-## Current features
+## Features
 - Live battery percentage and charging state
-- System RAM usage using Android ActivityManager
-- Internal storage usage using StatFs
-- Device Care app-process CPU time estimate (not total system CPU)
-- Adaptive history-based anomaly detection
-- Resource recommendations and a live dashboard
-- Local-only processing; no account or telemetry upload
+- System RAM and internal storage usage
+- Device Care process CPU-time estimate (not total system CPU)
+- TensorFlow Lite three-class resource-risk classifier (healthy / monitor / high risk)
+- On-device model inference; no telemetry upload
+- AI insight screen with class scores and actionable resource guidance
+- Live RAM, battery and storage trend charts
+- Session battery-change summary
+- Adaptive statistical anomaly detector as a transparent secondary signal
 
-## Technology
-- Kotlin, Android SDK, Jetpack Compose, Material 3
-- Android platform APIs for battery, memory and storage
-- On-device adaptive statistical anomaly detector
+## Architecture
+- Android UI: Kotlin + Jetpack Compose
+- Device metrics: Android BatteryManager, ActivityManager and StatFs
+- ML training: Python, TensorFlow/Keras
+- ML runtime: TensorFlow Lite Android interpreter
+- CI: GitHub Actions trains the model, packages the .tflite asset, then builds a debug APK
 
-## Build
-Open this folder in Android Studio (Giraffe or newer) with JDK 17 and Android SDK 35, then sync Gradle and run the app.
+## Machine-learning model
+The training script is in `ml/train_device_model.py`. It generates reproducible synthetic examples with five normalized inputs: battery level, RAM usage, storage usage, app-process CPU estimate and charging state. A small dense neural network is trained to classify resource pressure into three classes and exported to `app/src/main/assets/device_health_model.tflite`.
 
-For command-line build:
+The labels are generated from explicit threshold rules. This is an academic proof-of-concept model, not a validated predictor of hardware failure, battery health or device lifespan. Synthetic validation accuracy measures agreement with those generated labels only. Real-world evaluation requires consented, labelled device telemetry from multiple models and Android versions.
+
+## Build locally
+Requirements: Android Studio, JDK 17, Android SDK 35, Python 3.11 and pip.
+
+First train and generate the model asset:
 ```bash
-gradle wrapper --gradle-version 8.9
-./gradlew assembleDebug
+python -m pip install tensorflow-cpu==2.16.1 numpy==1.26.4
+python ml/train_device_model.py --output app/src/main/assets/device_health_model.tflite
 ```
 
-APK output:
-`app/build/outputs/apk/debug/app-debug.apk`
+Then open this folder in Android Studio, sync Gradle and run the app. Command line:
+```bash
+gradle assembleDebug
+```
+
+APK output: `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## GitHub Actions
-The workflow at `.github/workflows/android-build.yml` builds a debug APK and uploads it as the `device-care-debug-apk` artifact on pushes, pull requests and manual runs.
+Workflow: `.github/workflows/devicecare-android-build.yml`.
+Every matching push, pull request or manual dispatch:
+1. Trains and exports the TensorFlow Lite model.
+2. Passes the model asset to the Android build job.
+3. Builds the debug APK.
+4. Uploads `device-care-debug-apk` as a workflow artifact.
 
-## Accuracy and privacy notes
-Android restricts access to some system-wide telemetry. The CPU figure in this version is the Device Care process CPU estimate, not total device CPU utilization. Resource readings and anomaly analysis remain on-device. The adaptive detector uses recent readings as a baseline and should be treated as decision support, not as a guarantee of hardware fault prediction.
+Open the repository's **Actions** tab, select **Device Care Android APK**, open the latest run, and download the artifact after the build succeeds.
 
-## Roadmap
-- Add historical charts and Room persistence
-- Add thermal status and supported battery health fields
-- Add optional user-controlled alerts
-- Expand tests across Android versions and device manufacturers
+## Platform accuracy notes
+Android restricts system-wide CPU and per-app battery telemetry. The CPU card estimates CPU time used by this app process, not total device CPU. Battery percentage and charging state are read from the Android battery broadcast; they are not a battery capacity/health diagnosis. Session charts are in-memory and reset when the app process ends. Android does not permit ordinary third-party apps to force-stop other apps or arbitrarily clear their memory; Device Care provides guidance rather than unsafe "RAM booster" claims.
+
+All monitoring and model inference run locally on the phone.
