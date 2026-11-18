@@ -1,9 +1,10 @@
-name: Deploy FixWise to GitHub Pages
+name: Deploy FixWise and Device Care to GitHub Pages
 on:
   push:
     branches: [main]
     paths:
       - 'FixWise/**'
+      - 'Capstone/DeviceCare/web/**'
       - '.github/workflows/deploy-fixwise.yml'
   workflow_dispatch:
 permissions:
@@ -19,10 +20,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Upload FixWise site
+      - name: Assemble both web apps
+        run: |
+          mkdir -p public/DeviceCare
+          cp -a FixWise/. public/
+          cp -a Capstone/DeviceCare/web/. public/DeviceCare/
+      - name: Upload combined site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: FixWise
+          path: public
   deploy:
     environment:
       name: github-pages
